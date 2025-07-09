@@ -1,68 +1,24 @@
-const express = require('express');
-const axios = require('axios');
-require('dotenv').config();
-
+const express = require("express");
 const app = express();
+const port = process.env.PORT || 10000;
+
 app.use(express.json());
 
-app.post('/webhook', async (req, res) => {
-  const data = req.body;
-  const metadata = data?.payload?.payment?.metadata;
+app.post("/webhook", async (req, res) => {
+  const evento = req.body;
+  const origem = evento?.metadata?.origem;
 
-  if (
-    data.event === 'payment.paid' &&
-    metadata &&
-    metadata.origem?.toLowerCase() !== 'tray'
-  ) {
-    const payment = data.payload.payment;
-    const cliente = payment.customer.name || 'Cliente Pagar.me';
-    const email = payment.customer.email || 'sememail@exemplo.com';
-    const valor = payment.amount / 100;
+  console.log("🔔 Webhook recebido:", JSON.stringify(evento));
 
-    const pedidoXML = `
-      <pedido>
-        <cliente>
-          <nome>${cliente}</nome>
-          <email>${email}</email>
-        </cliente>
-        <itens>
-          <item>
-            <codigo>001</codigo>
-            <descricao>Venda via Pagar.me</descricao>
-            <quantidade>1</quantidade>
-            <valor>${valor}</valor>
-          </item>
-        </itens>
-        <forma_pagamento>
-          <forma>PIX</forma>
-        </forma_pagamento>
-      </pedido>
-    `;
-
-    try {
-      const response = await axios.post(
-        'https://bling.com.br/Api/v2/pedido/json/',
-        null,
-        {
-          params: {
-            apikey: process.env.BLING_API_KEY,
-            xml: pedidoXML
-          }
-        }
-      );
-
-      console.log('✅ Pedido criado no Bling com sucesso!', response.data);
-    } catch (error) {
-      console.error('❌ Erro ao criar pedido no Bling:', error.response?.data || error);
-    }
-  } else {
-    console.log('🚫 Evento ignorado: origem Tray ou inválida.');
+  if (origem === "tray") {
+    console.log("🚫 Evento ignorado por ser da origem 'tray'");
+    return res.status(200).send("Ignorado");
   }
 
-  res.sendStatus(200);
+  // Em breve: lógica para integrar com o Bling.
+  res.status(200).send("Pagamento aceito. Integração será processada.");
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando na porta ${PORT}`);
+app.listen(port, () => {
+  console.log(`🚀 Webhook ouvindo na porta ${port}`);
 });
