@@ -1,13 +1,13 @@
 {
-  "name": "webhook-pagarme-bling-v3",
-  "version": "1.1.0",
+  "name": "webhook-pagarme-bling",
+  "version": "1.0.0",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "axios": "^1.6.7",
     "express": "^4.18.2",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "axios": "^1.6.7"
   }
 }
