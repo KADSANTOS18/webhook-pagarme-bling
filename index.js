@@ -1,24 +1,61 @@
-const express = require("express");
+const express = require('express');
+const axios = require('axios');
+const bodyParser = require('body-parser');
 const app = express();
-const port = process.env.PORT || 10000;
+const PORT = process.env.PORT || 10000;
 
-app.use(express.json());
+app.use(bodyParser.json());
 
-app.post("/webhook", async (req, res) => {
-  const evento = req.body;
-  const origem = evento?.metadata?.origem;
+app.post('/webhook', async (req, res) => {
+  const body = req.body;
 
-  console.log("🔔 Webhook recebido:", JSON.stringify(evento));
-
-  if (origem === "tray") {
-    console.log("🚫 Evento ignorado por ser da origem 'tray'");
-    return res.status(200).send("Ignorado");
+  // Ignorar se a origem for 'tray'
+  if (body.metadata?.origem === 'tray') {
+    console.log('Pagamento da Tray ignorado.');
+    return res.status(200).send('Ignorado');
   }
 
-  // Em breve: lógica para integrar com o Bling.
-  res.status(200).send("Pagamento aceito. Integração será processada.");
+  // Confirmação de pagamento
+  if (body.current_status === 'paid') {
+    const pedido = {
+      cliente: {
+        nome: body.customer?.name || 'Nome não informado',
+        email: body.customer?.email || 'sem@email.com',
+        telefone: body.customer?.phone_numbers?.[0] || '',
+      },
+      itens: [
+        {
+          codigo: body.metadata?.sku || 'SKU',
+          descricao: body.metadata?.descricao || 'Produto',
+          quantidade: 1,
+          valor_unitario: body.amount / 100,
+        },
+      ],
+    };
+
+    try {
+      const response = await axios.post(
+        'https://bling.com.br/Api/v3/pedido',
+        pedido,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.BLING_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      console.log('Pedido criado no Bling:', response.data);
+      res.status(200).send('Pedido criado');
+    } catch (err) {
+      console.error('Erro ao criar pedido:', err?.response?.data || err.message);
+      res.status(500).send('Erro ao criar pedido');
+    }
+  } else {
+    res.status(200).send('Status ignorado');
+  }
 });
 
-app.listen(port, () => {
-  console.log(`🚀 Webhook ouvindo na porta ${port}`);
+app.listen(PORT, () => {
+  console.log(`🚀 Webhook ouvindo na porta ${PORT}`);
 });
