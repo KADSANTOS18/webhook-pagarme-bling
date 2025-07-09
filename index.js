@@ -1,16 +1,18 @@
 const express = require('express');
 const axios = require('axios');
-const app = express();
+require('dotenv').config();
 
+const app = express();
 app.use(express.json());
 
 app.post('/webhook', async (req, res) => {
   const data = req.body;
+  const metadata = data?.payload?.payment?.metadata;
 
   if (
     data.event === 'payment.paid' &&
-    data.payload.payment.metadata &&
-    data.payload.payment.metadata.origem === 'manual'
+    metadata &&
+    metadata.origem?.toLowerCase() !== 'tray'
   ) {
     const payment = data.payload.payment;
     const cliente = payment.customer.name || 'Cliente Pagar.me';
@@ -26,7 +28,7 @@ app.post('/webhook', async (req, res) => {
         <itens>
           <item>
             <codigo>001</codigo>
-            <descricao>Venda manual via Pagar.me</descricao>
+            <descricao>Venda via Pagar.me</descricao>
             <quantidade>1</quantidade>
             <valor>${valor}</valor>
           </item>
@@ -53,6 +55,8 @@ app.post('/webhook', async (req, res) => {
     } catch (error) {
       console.error('❌ Erro ao criar pedido no Bling:', error.response?.data || error);
     }
+  } else {
+    console.log('🚫 Evento ignorado: origem Tray ou inválida.');
   }
 
   res.sendStatus(200);
@@ -60,5 +64,5 @@ app.post('/webhook', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Webhook ouvindo na porta ${PORT}`);
+  console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });
