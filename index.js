@@ -39,7 +39,7 @@ app.post('/webhook', async (req, res) => {
         pedido,
         {
           headers: {
-            Authorization: `Bearer ${process.env.BLING_TOKEN}`,
+            Authorization: `Bearer ${process.env.BLING_TOKEN}`
             'Content-Type': 'application/json',
           },
         }
