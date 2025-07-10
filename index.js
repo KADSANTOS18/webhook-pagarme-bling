@@ -35,15 +35,15 @@ app.post('/webhook', async (req, res) => {
 
     try {
       const response = await axios.post(
-        'https://www.bling.com.br/Api/v3/orders',
-        pedido,
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.BLING_TOKEN}`
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+  'https://www.bling.com.br/Api/v3/orders',
+  pedido,
+  {
+    headers: {
+      Authorization: `Bearer ${process.env.BLING_TOKEN}`,
+      'Content-Type': 'application/json'
+    }
+  }
+);
 
       console.log('Pedido criado no Bling:', response.data);
       res.status(200).send('Pedido criado');
